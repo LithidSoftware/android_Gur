@@ -1,0 +1,31 @@
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+    <TextView
+            android:id="@+id/no_saved"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="No items uploaded"
+            android:gravity="center"
+            android:layout_weight="1"/>
+
+    <GridView
+            android:id="@+id/grid_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:numColumns="3"
+            android:gravity="center"
+            android:clickable="true"
+            android:horizontalSpacing="5dp"
+            android:padding="5dp"
+            android:verticalSpacing="5dp"
+            android:drawSelectorOnTop="false"
+            android:visibility="gone"
+            android:stretchMode="columnWidth"
+            android:descendantFocusability="beforeDescendants"/>
+
+</LinearLayout>

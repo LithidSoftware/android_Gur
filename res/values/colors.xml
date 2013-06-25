@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="blue">#0099cc</color>
+    <color name="trans">#00000000</color>
+    <drawable name="loader">#99000000</drawable>
+</resources>
