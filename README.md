@@ -1,4 +1,4 @@
 Gur
 ===
 
-Imgur uploader
+Imgur uploader for android
