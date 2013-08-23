@@ -6,21 +6,33 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.widget.Toast;
 
 import com.lithidsw.gur.MainActivity;
 import com.lithidsw.gur.R;
+import com.lithidsw.gur.database.QueTable;
+import com.lithidsw.gur.loader.ImageUploader;
 import com.lithidsw.gur.utils.NotificationUpload;
 
 public class UploadService extends Service {
 
     Context context;
+    private int mQueCount = 0;
+    private Intent intent;
+    private final Handler handler = new Handler();
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        intent = new Intent("com.lithidsw.gur.UPLOAD_COMPLETE");
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         context = this;
-        System.out.println("Gur, starting the upload service");
         start();
         return (START_NOT_STICKY);
     }
@@ -36,26 +48,34 @@ public class UploadService extends Service {
     }
 
     private void start() {
-        System.out.println("Gur, starting the start function");
         final Thread thread = new Thread() {
             @Override
             public void run() {
-                for (int i=1; i<=5; i++) {
-                    fg("Uploading... "+i+"/5");
-                    try {
-                        sleep(5000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                mQueCount = new QueTable(context).getQueCount();
+                while (mQueCount != 0) {
+                    String[] que_item = new QueTable(context).getLastestQue();
+                    if (que_item != null) {
+                        fg("Uploading image | " + que_item[1]);
+                        new ImageUploader(context).uploadImage(que_item[2], que_item[1]);
+                        handler.post(sendUpdatesToUI);
                     }
 
-                    NotificationUpload.startNoti(context);
+                    mQueCount = new QueTable(context).getQueCount();
                 }
+
+                NotificationUpload.startNoti(context);
                 stopSelf();
             }
         };
         thread.start();
         fg("Uploading...");
     }
+
+    private Runnable sendUpdatesToUI = new Runnable() {
+        public void run() {
+            sendBroadcast(intent);
+        }
+    };
 
     private PendingIntent getStopIntent() {
         Intent intent = new Intent("com.lithidsw.gur.STOP_CURRENT");
@@ -72,8 +92,7 @@ public class UploadService extends Service {
                 .setProgress(0, 0, true)
                 .setContentTitle("Gur Upload")
                 .setContentText(message)
-                .addAction(R.drawable.ic_action_remove, "Stop upload",
-                        getStopIntent());
+                .addAction(R.drawable.ic_action_remove, "Stop upload", getStopIntent());
 
         Intent intent = new Intent(context, MainActivity.class);
         intent.setAction(Intent.ACTION_MAIN);

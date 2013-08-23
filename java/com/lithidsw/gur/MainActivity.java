@@ -6,8 +6,10 @@ import android.app.ActionBar;
 import android.app.ActivityManager;
 import android.app.FragmentTransaction;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -49,7 +51,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        System.out.println("Gur, New MainActivity started!");
 
         Intent in = getIntent();
         if (in.getExtras() != null) {
@@ -116,6 +117,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         switch (item.getItemId()) {
             case R.id.action_info:
                 Toast.makeText(MainActivity.this, "Holder for about dialog!", Toast.LENGTH_SHORT).show();
+                sendBroadcast(new Intent("com.lithidsw.gur.UPLOAD_COMPLETE"));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

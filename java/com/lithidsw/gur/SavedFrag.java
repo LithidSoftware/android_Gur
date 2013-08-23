@@ -1,8 +1,11 @@
 package com.lithidsw.gur;
 
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,6 +29,7 @@ public class SavedFrag extends Fragment {
 
     private FragmentActivity fa;
     private SavedAdapter adapter;
+    private BroadcastReceiver mReceiver = null;
 
     private TextView addImageTxt;
     private GridView mainGrid;
@@ -100,8 +104,6 @@ public class SavedFrag extends Fragment {
             }
         });
         addImageTxt = (TextView) ll.findViewById(R.id.no_saved);
-
-        new SavedLoader().execute();
         return ll;
     }
 
@@ -114,6 +116,41 @@ public class SavedFrag extends Fragment {
             addImageTxt.setVisibility(View.VISIBLE);
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        registerUpdateItemsListener();
+        new SavedLoader().execute();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mReceiver != null) {
+            fa.unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
+    }
+
+    private void registerUpdateItemsListener() {
+        if (mReceiver == null) {
+            mReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    String mAction = intent.getAction();
+                    if (mAction != null && mAction.equals("com.lithidsw.gur.UPLOAD_COMPLETE")) {
+                        System.out.println("Gur, getting broadcast now!");
+                        new SavedLoader().execute();
+                    }
+                }
+            };
+
+            IntentFilter mFilter = new IntentFilter("com.lithidsw.gur.UPLOAD_COMPLETE");
+            getActivity().registerReceiver(mReceiver, mFilter);
+        }
+    }
+
 
     class SavedLoader extends AsyncTask<String, String, Integer> {
         @Override

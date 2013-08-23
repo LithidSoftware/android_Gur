@@ -37,6 +37,21 @@ public class QueTable {
         close();
     }
 
+    public String[] getLastestQue() {
+        String[] items = new String[4];
+        open();
+        Cursor c = database.query(TABLE, new String[]{"*"}, null, null, null, null, null);
+        if (c.moveToFirst()) {
+            items[0] = c.getString(c.getColumnIndex(DBHelper.C_ID));
+            items[1] = c.getString(c.getColumnIndex(DBHelper.C_TITLE));
+            items[2] = c.getString(c.getColumnIndex(DBHelper.C_PATH));
+            items[3] = c.getString(c.getColumnIndex(DBHelper.C_MD5));
+        }
+        close();
+
+        return items;
+    }
+
     public ArrayList<String[]> getAllQue() {
         ArrayList<String[]> list = new ArrayList<String[]>();
         open();
@@ -45,14 +60,10 @@ public class QueTable {
         if (c.moveToFirst()) {
             for (int i = 0; i < c.getCount(); i++) {
                 String[] items = new String[4];
-                items[0] = c.getString(c
-                        .getColumnIndex(DBHelper.C_ID));
-                items[1] = c.getString(c
-                        .getColumnIndex(DBHelper.C_TITLE));
-                items[2] = c.getString(c
-                        .getColumnIndex(DBHelper.C_PATH));
-                items[3] = c.getString(c
-                        .getColumnIndex(DBHelper.C_MD5));
+                items[0] = c.getString(c.getColumnIndex(DBHelper.C_ID));
+                items[1] = c.getString(c.getColumnIndex(DBHelper.C_TITLE));
+                items[2] = c.getString(c.getColumnIndex(DBHelper.C_PATH));
+                items[3] = c.getString(c.getColumnIndex(DBHelper.C_MD5));
                 list.add(items);
                 c.moveToNext();
             }
@@ -61,16 +72,15 @@ public class QueTable {
         return list;
     }
 
-    public int getSavedCount() {
+    public int getQueCount() {
         int count = 0;
         open();
-        Cursor c = null;
-        c = database.query(TABLE, new String[]{"*"}, null, null, null, null, "id DESC");
+        Cursor c = database.rawQuery("select count(*) from " + TABLE, null);
         if (c.moveToFirst()) {
-            count = c.getInt(c.getColumnIndex(DBHelper.C_ID));
+            count = c.getInt(0);
         }
         close();
-        return count+1;
+        return count;
     }
 
     public boolean isMd5(String md5) {
@@ -86,9 +96,9 @@ public class QueTable {
         return is;
     }
 
-    public void deleteItem(String id) {
+    public void deleteItem(String MD5) {
         open();
-        database.delete(TABLE, DBHelper.C_ID + " = '" + id + "'", null);
+        database.delete(TABLE, DBHelper.C_MD5 + " = '" + MD5 + "'", null);
         close();
     }
 

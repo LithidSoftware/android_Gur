@@ -1,10 +1,12 @@
 package com.lithidsw.gur.loader;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
 
+import com.lithidsw.gur.database.QueTable;
 import com.lithidsw.gur.database.SavedTable;
 import com.lithidsw.gur.utils.Utils;
 
@@ -32,16 +34,16 @@ public class ImageUploader {
         this.context = context;
     }
 
-    public boolean uploadImage(String filename, Integer pos) {
+    public boolean uploadImage(String filename, String name) {
         Bitmap bitmap = BitmapFactory.decodeFile(filename);
         String link = null;
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        URL url = null;
-        String data = null;
-        URLConnection conn = null;
-        OutputStreamWriter wr = null;
+        URL url;
+        String data;
+        URLConnection conn;
+        OutputStreamWriter wr;
         try {
             url = new URL("https://api.imgur.com/3/image");
             data = URLEncoder.encode("image", "UTF-8") + "=" + URLEncoder.encode(Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT), "UTF-8");
@@ -71,7 +73,8 @@ public class ImageUploader {
                     JSONObject c = json.getJSONObject("data");
                     link = c.getString("link");
                     String md5 = Utils.calculateMD5(filename);
-                    new SavedTable(context).updatedItem("Image_"+pos, "Desc_"+pos, link, md5, false);
+                    new SavedTable(context).updatedItem("Image_"+name, "Desc_"+name, link, md5, false);
+                    new QueTable(context).deleteItem(md5);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

@@ -39,6 +39,7 @@ public class UploadFrag extends Fragment {
 
     private FragmentActivity fa;
     private UploadAdapter adapter;
+    private BroadcastReceiver mReceiver = null;
 
     private QueTable qt;
 
@@ -91,18 +92,26 @@ public class UploadFrag extends Fragment {
         });
 
         updateLoader();
-        checkQue();
         return ll;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        registerUpdateItemsListener();
+        if (!isMyServiceRunning()) {
+            checkQue();
+        }
+        updateLoader();
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        if (mReceiver != null) {
+            fa.unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
     }
 
     private File createImageFile() throws IOException {
@@ -158,9 +167,8 @@ public class UploadFrag extends Fragment {
     }
 
     private void checkQue() {
-        if (new QueTable(fa).getSavedCount() > 0) {
+        if (new QueTable(fa).getQueCount() > 0) {
             if (!isMyServiceRunning()) {
-                Toast.makeText(fa, "Running service", Toast.LENGTH_SHORT).show();
                 fa.startService(new Intent(fa, UploadService.class));
             }
         }
@@ -207,34 +215,41 @@ public class UploadFrag extends Fragment {
         }
     }
 
-    class QueLoader extends AsyncTask<String, String, Integer> {
+    private void registerUpdateItemsListener() {
+        if (mReceiver == null) {
+            mReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    String mAction = intent.getAction();
+                    if (mAction != null && mAction.equals("com.lithidsw.gur.UPLOAD_COMPLETE")) {
+                        System.out.println("Gur, getting broadcast now!");
+                        updateLoader();
+                    }
+                }
+            };
+
+            IntentFilter mFilter = new IntentFilter("com.lithidsw.gur.UPLOAD_COMPLETE");
+            getActivity().registerReceiver(mReceiver, mFilter);
+        }
+    }
+
+    class QueLoader extends AsyncTask<String, String, ArrayList<String[]>> {
         @Override
         protected void onPreExecute() {
-            imageItems.clear();
             mainGrid.invalidateViews();
         }
 
         @Override
-        protected Integer doInBackground(String... strings) {
-            ArrayList<String[]> list = new QueTable(fa).getAllQue();
-            if (list.size() > 0) {
-                for (int i=0; i < list.size(); i++) {
-                    String[] item = new String[4];
-                    item[0] = list.get(i)[0];
-                    item[1] = list.get(i)[1];
-                    item[2] = list.get(i)[2];
-                    item[3] = list.get(i)[3];
-                    imageItems.add(item);
-                }
-                return imageItems.size();
-            }
-            return 0;
+        protected ArrayList<String[]> doInBackground(String... strings) {
+            return new QueTable(fa).getAllQue();
         }
 
         @Override
-        protected void onPostExecute(Integer count) {
+        protected void onPostExecute(ArrayList<String[]> list) {
+            imageItems.clear();
+            imageItems.addAll(list);
             adapter.notifyDataSetChanged();
-            updateview(count);
+            updateview(imageItems.size());
         }
     }
 }
